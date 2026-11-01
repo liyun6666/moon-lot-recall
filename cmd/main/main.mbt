@@ -9,6 +9,7 @@ fn usage() -> String {
     #|  moon run cmd/main --target js -- actions LEDGER.json RECALL.json
     #|  moon run cmd/main --target js -- inventory LEDGER.json AS_OF
     #|  moon run cmd/main --target js -- upstream LEDGER.json LOT_ID AS_OF
+    #|  moon run cmd/main --target js -- reconcile LEDGER.json COUNTS.csv AS_OF [json|markdown]
     #|  moon run cmd/main --target js -- import-csv LOTS.csv TRANSFORMATIONS.csv SHIPMENTS.csv OUT.json
     #|
     #|All timestamps are Unix seconds; all quantities are integer grams.
@@ -113,12 +114,13 @@ fn run_analyze(args : Array[String]) -> Unit {
       println(@lib.render_validation(validation))
       @sys.exit(2)
     }
-    Ok(report) => match format {
-      "json" => println(@lib.encode_report(report))
-      "markdown" => println(@lib.render_markdown(report))
-      "csv" => println(@lib.render_shipments_csv(report))
-      _ => fail_cli("format must be json, markdown, or csv")
-    }
+    Ok(report) =>
+      match format {
+        "json" => println(@lib.encode_report(report))
+        "markdown" => println(@lib.render_markdown(report))
+        "csv" => println(@lib.render_shipments_csv(report))
+        _ => fail_cli("format must be json, markdown, or csv")
+      }
   }
 }
 
@@ -194,7 +196,9 @@ fn run_upstream(args : Array[String]) -> Unit {
 ///|
 fn run_import_csv(args : Array[String]) -> Unit {
   if args.length() != 5 {
-    fail_cli("import-csv requires LOTS.csv TRANSFORMATIONS.csv SHIPMENTS.csv OUT.json")
+    fail_cli(
+      "import-csv requires LOTS.csv TRANSFORMATIONS.csv SHIPMENTS.csv OUT.json",
+    )
     return
   }
   let lots = match read_text(args[1]) {
@@ -224,6 +228,47 @@ fn run_import_csv(args : Array[String]) -> Unit {
 }
 
 ///|
+fn run_reconcile(args : Array[String]) -> Unit {
+  if args.length() < 4 || args.length() > 5 {
+    fail_cli("reconcile requires LEDGER.json COUNTS.csv AS_OF [json|markdown]")
+    return
+  }
+  let ledger = match read_ledger(args[1]) {
+    None => return
+    Some(value) => value
+  }
+  let text = match read_text(args[2]) {
+    None => return
+    Some(value) => value
+  }
+  let cutoff = match parse_time(args[3]) {
+    None => return
+    Some(value) => value
+  }
+  let format = if args.length() == 5 { args[4] } else { "markdown" }
+  let counts = match @lib.parse_stock_counts_csv(text) {
+    Err(validation) => {
+      println(@lib.render_validation(validation))
+      @sys.exit(2)
+      return
+    }
+    Ok(value) => value
+  }
+  match @lib.reconcile_stock(ledger, counts, cutoff) {
+    Err(validation) => {
+      println(@lib.render_validation(validation))
+      @sys.exit(2)
+    }
+    Ok(report) =>
+      match format {
+        "json" => println(@json.to_json(report).stringify(indent=2))
+        "markdown" => println(@lib.render_reconciliation_markdown(report))
+        _ => fail_cli("format must be json or markdown")
+      }
+  }
+}
+
+///|
 fn main {
   // The Node.js backend exposes [node, compiled-script, user-arguments...].
   let raw = @env.args()
@@ -238,6 +283,7 @@ fn main {
     "actions" => run_actions(args)
     "inventory" => run_inventory(args)
     "upstream" => run_upstream(args)
+    "reconcile" => run_reconcile(args)
     "import-csv" => run_import_csv(args)
     _ => {
       println(usage())
