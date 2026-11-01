@@ -12,6 +12,7 @@ fn usage() -> String {
     #|  moon run cmd/main --target js -- reconcile LEDGER.json COUNTS.csv AS_OF [json|markdown]
     #|  moon run cmd/main --target js -- consignees LEDGER.json RECALL.json [json|markdown|csv]
     #|  moon run cmd/main --target js -- responses LEDGER.json RECALL.json EVENTS.csv [json|markdown]
+    #|  moon run cmd/main --target js -- delta LEDGER.json RECALL.json NEW_AS_OF [json|markdown]
     #|  moon run cmd/main --target js -- import-csv LOTS.csv TRANSFORMATIONS.csv SHIPMENTS.csv OUT.json
     #|
     #|All timestamps are Unix seconds; all quantities are integer grams.
@@ -344,6 +345,39 @@ fn run_responses(args : Array[String]) -> Unit {
 }
 
 ///|
+fn run_delta(args : Array[String]) -> Unit {
+  if args.length() < 4 || args.length() > 5 {
+    fail_cli("delta requires LEDGER.json RECALL.json NEW_AS_OF [json|markdown]")
+    return
+  }
+  let ledger = match read_ledger(args[1]) {
+    None => return
+    Some(value) => value
+  }
+  let request = match read_request(args[2]) {
+    None => return
+    Some(value) => value
+  }
+  let cutoff = match parse_time(args[3]) {
+    None => return
+    Some(value) => value
+  }
+  let format = if args.length() == 5 { args[4] } else { "markdown" }
+  match @lib.compare_cutoffs(ledger, request, cutoff) {
+    Err(validation) => {
+      println(@lib.render_validation(validation))
+      @sys.exit(2)
+    }
+    Ok(delta) =>
+      match format {
+        "json" => println(@json.to_json(delta).stringify(indent=2))
+        "markdown" => println(@lib.render_delta_markdown(delta))
+        _ => fail_cli("format must be json or markdown")
+      }
+  }
+}
+
+///|
 fn main {
   // The Node.js backend exposes [node, compiled-script, user-arguments...].
   let raw = @env.args()
@@ -361,6 +395,7 @@ fn main {
     "reconcile" => run_reconcile(args)
     "consignees" => run_consignees(args)
     "responses" => run_responses(args)
+    "delta" => run_delta(args)
     "import-csv" => run_import_csv(args)
     _ => {
       println(usage())
