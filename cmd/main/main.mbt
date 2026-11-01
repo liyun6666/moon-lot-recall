@@ -13,6 +13,7 @@ fn usage() -> String {
     #|  moon run cmd/main --target js -- consignees LEDGER.json RECALL.json [json|markdown|csv]
     #|  moon run cmd/main --target js -- responses LEDGER.json RECALL.json EVENTS.csv [json|markdown]
     #|  moon run cmd/main --target js -- delta LEDGER.json RECALL.json NEW_AS_OF [json|markdown]
+    #|  moon run cmd/main --target js -- readiness LEDGER.json RECALL.json COUNTS.csv EVENTS.csv [json|markdown]
     #|  moon run cmd/main --target js -- import-csv LOTS.csv TRANSFORMATIONS.csv SHIPMENTS.csv OUT.json
     #|
     #|All timestamps are Unix seconds; all quantities are integer grams.
@@ -378,6 +379,61 @@ fn run_delta(args : Array[String]) -> Unit {
 }
 
 ///|
+fn run_readiness(args : Array[String]) -> Unit {
+  if args.length() < 5 || args.length() > 6 {
+    fail_cli(
+      "readiness requires LEDGER.json RECALL.json COUNTS.csv EVENTS.csv [json|markdown]",
+    )
+    return
+  }
+  let ledger = match read_ledger(args[1]) {
+    None => return
+    Some(value) => value
+  }
+  let request = match read_request(args[2]) {
+    None => return
+    Some(value) => value
+  }
+  let count_text = match read_text(args[3]) {
+    None => return
+    Some(value) => value
+  }
+  let event_text = match read_text(args[4]) {
+    None => return
+    Some(value) => value
+  }
+  let counts = match @lib.parse_stock_counts_csv(count_text) {
+    Err(validation) => {
+      println(@lib.render_validation(validation))
+      @sys.exit(2)
+      return
+    }
+    Ok(value) => value
+  }
+  let events = match @lib.parse_response_events_csv(event_text) {
+    Err(validation) => {
+      println(@lib.render_validation(validation))
+      @sys.exit(2)
+      return
+    }
+    Ok(value) => value
+  }
+  let format = if args.length() == 6 { args[5] } else { "markdown" }
+  match @lib.review_readiness(ledger, request, counts, events) {
+    Err(validation) => {
+      println(@lib.render_validation(validation))
+      @sys.exit(2)
+    }
+    Ok(report) =>
+      match format {
+        "json" => println(@json.to_json(report).stringify(indent=2))
+        "markdown" => println(@lib.render_readiness_markdown(report))
+        _ => fail_cli("format must be json or markdown")
+      }
+  }
+}
+
+///|
 fn main {
   // The Node.js backend exposes [node, compiled-script, user-arguments...].
   let raw = @env.args()
@@ -396,6 +452,7 @@ fn main {
     "consignees" => run_consignees(args)
     "responses" => run_responses(args)
     "delta" => run_delta(args)
+    "readiness" => run_readiness(args)
     "import-csv" => run_import_csv(args)
     _ => {
       println(usage())
