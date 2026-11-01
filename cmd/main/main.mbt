@@ -11,6 +11,7 @@ fn usage() -> String {
     #|  moon run cmd/main --target js -- upstream LEDGER.json LOT_ID AS_OF
     #|  moon run cmd/main --target js -- reconcile LEDGER.json COUNTS.csv AS_OF [json|markdown]
     #|  moon run cmd/main --target js -- consignees LEDGER.json RECALL.json [json|markdown|csv]
+    #|  moon run cmd/main --target js -- responses LEDGER.json RECALL.json EVENTS.csv [json|markdown]
     #|  moon run cmd/main --target js -- import-csv LOTS.csv TRANSFORMATIONS.csv SHIPMENTS.csv OUT.json
     #|
     #|All timestamps are Unix seconds; all quantities are integer grams.
@@ -300,6 +301,49 @@ fn run_consignees(args : Array[String]) -> Unit {
 }
 
 ///|
+fn run_responses(args : Array[String]) -> Unit {
+  if args.length() < 4 || args.length() > 5 {
+    fail_cli(
+      "responses requires LEDGER.json RECALL.json EVENTS.csv [json|markdown]",
+    )
+    return
+  }
+  let ledger = match read_ledger(args[1]) {
+    None => return
+    Some(value) => value
+  }
+  let request = match read_request(args[2]) {
+    None => return
+    Some(value) => value
+  }
+  let source = match read_text(args[3]) {
+    None => return
+    Some(value) => value
+  }
+  let format = if args.length() == 5 { args[4] } else { "markdown" }
+  let events = match @lib.parse_response_events_csv(source) {
+    Err(validation) => {
+      println(@lib.render_validation(validation))
+      @sys.exit(2)
+      return
+    }
+    Ok(value) => value
+  }
+  match @lib.review_responses(ledger, request, events) {
+    Err(validation) => {
+      println(@lib.render_validation(validation))
+      @sys.exit(2)
+    }
+    Ok(report) =>
+      match format {
+        "json" => println(@json.to_json(report).stringify(indent=2))
+        "markdown" => println(@lib.render_responses_markdown(report))
+        _ => fail_cli("format must be json or markdown")
+      }
+  }
+}
+
+///|
 fn main {
   // The Node.js backend exposes [node, compiled-script, user-arguments...].
   let raw = @env.args()
@@ -316,6 +360,7 @@ fn main {
     "upstream" => run_upstream(args)
     "reconcile" => run_reconcile(args)
     "consignees" => run_consignees(args)
+    "responses" => run_responses(args)
     "import-csv" => run_import_csv(args)
     _ => {
       println(usage())
