@@ -85,3 +85,42 @@ test "stock count CSV supports quoted facility and catches fractional grams" {
     Err(report) => assert_true(has_code(report, "csv-invalid-integer"))
   }
 }
+
+///|
+test "physical count must use the comparison cutoff" {
+  let counts : Array[@moon-lot-recall.StockCount] = [
+    {
+      lot_id: "RAW-1",
+      facility: "Mill A",
+      counted_g: 100L,
+      counted_at: 39L,
+      reference: "OLD-COUNT",
+    },
+  ]
+  match @moon-lot-recall.reconcile_stock(sample_ledger(), counts, 40L) {
+    Ok(_) =>
+      fail("stale physical count cannot be compared to current book stock")
+    Err(report) => assert_true(has_code(report, "invalid-count-time"))
+  }
+}
+
+///|
+test "surplus count is reported with signed difference" {
+  let counts : Array[@moon-lot-recall.StockCount] = [
+    {
+      lot_id: "RAW-1",
+      facility: "Mill A",
+      counted_g: 120L,
+      counted_at: 40L,
+      reference: "COUNT-1",
+    },
+  ]
+  match @moon-lot-recall.reconcile_stock(sample_ledger(), counts, 40L) {
+    Err(_) => fail("surplus is a finding, not invalid evidence")
+    Ok(report) => {
+      assert_eq(report.rows[0].difference_g, 20L)
+      assert_eq(report.rows[0].status, "surplus")
+      assert_false(report.balanced)
+    }
+  }
+}
