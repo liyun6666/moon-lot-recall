@@ -10,6 +10,7 @@ fn usage() -> String {
     #|  moon run cmd/main --target js -- inventory LEDGER.json AS_OF
     #|  moon run cmd/main --target js -- upstream LEDGER.json LOT_ID AS_OF
     #|  moon run cmd/main --target js -- reconcile LEDGER.json COUNTS.csv AS_OF [json|markdown]
+    #|  moon run cmd/main --target js -- consignees LEDGER.json RECALL.json [json|markdown|csv]
     #|  moon run cmd/main --target js -- import-csv LOTS.csv TRANSFORMATIONS.csv SHIPMENTS.csv OUT.json
     #|
     #|All timestamps are Unix seconds; all quantities are integer grams.
@@ -269,6 +270,36 @@ fn run_reconcile(args : Array[String]) -> Unit {
 }
 
 ///|
+fn run_consignees(args : Array[String]) -> Unit {
+  if args.length() < 3 || args.length() > 4 {
+    fail_cli("consignees requires LEDGER.json RECALL.json [json|markdown|csv]")
+    return
+  }
+  let ledger = match read_ledger(args[1]) {
+    None => return
+    Some(value) => value
+  }
+  let request = match read_request(args[2]) {
+    None => return
+    Some(value) => value
+  }
+  let format = if args.length() == 4 { args[3] } else { "markdown" }
+  match @lib.group_consignees(ledger, request) {
+    Err(validation) => {
+      println(@lib.render_validation(validation))
+      @sys.exit(2)
+    }
+    Ok(report) =>
+      match format {
+        "json" => println(@json.to_json(report).stringify(indent=2))
+        "markdown" => println(@lib.render_consignees_markdown(report))
+        "csv" => println(@lib.render_consignees_csv(report))
+        _ => fail_cli("format must be json, markdown, or csv")
+      }
+  }
+}
+
+///|
 fn main {
   // The Node.js backend exposes [node, compiled-script, user-arguments...].
   let raw = @env.args()
@@ -284,6 +315,7 @@ fn main {
     "inventory" => run_inventory(args)
     "upstream" => run_upstream(args)
     "reconcile" => run_reconcile(args)
+    "consignees" => run_consignees(args)
     "import-csv" => run_import_csv(args)
     _ => {
       println(usage())
