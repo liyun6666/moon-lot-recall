@@ -24,3 +24,7 @@ keywords = ["food-safety", "recall", "traceability", "lot", "audit"]
 preferred_target = "js"
 
 description = "Offline food-lot recall impact tracing with evidence paths and conservative diagnostics"
+
+import {
+    "moonbitlang/x@0.5.7",
+}
