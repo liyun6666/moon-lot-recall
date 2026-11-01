@@ -1,7 +1,8 @@
 ///|
 test "ledger JSON round trips with exact integer grams" {
   let original = sample_ledger()
-  match @moon-lot-recall.decode_ledger(@moon-lot-recall.encode_ledger(original)) {
+  match
+    @moon-lot-recall.decode_ledger(@moon-lot-recall.encode_ledger(original)) {
     Err(_) => fail("encoded ledger should decode")
     Ok(decoded) => {
       assert_eq(decoded.lots.length(), 3)
@@ -31,9 +32,13 @@ test "missing required ledger field is rejected" {
 ///|
 test "request JSON round trips" {
   let request : @moon-lot-recall.RecallRequest = {
-    id: "R-1", reason: "supplier notice", seed_lots: ["RAW-1"], as_of: 50L,
+    id: "R-1",
+    reason: "supplier notice",
+    seed_lots: ["RAW-1"],
+    as_of: 50L,
   }
-  match @moon-lot-recall.decode_request(@moon-lot-recall.encode_request(request)) {
+  match
+    @moon-lot-recall.decode_request(@moon-lot-recall.encode_request(request)) {
     Ok(decoded) => assert_eq(decoded.seed_lots[0], "RAW-1")
     Err(_) => fail("encoded request should decode")
   }

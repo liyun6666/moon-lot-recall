@@ -21,7 +21,8 @@ fn used_by_processing(ledger : Ledger, as_of : Int64) -> Map[String, Int64] {
   for event in ledger.transformations {
     if event.occurred_at <= as_of {
       for portion in event.inputs {
-        consumed[portion.lot_id] = consumed.get(portion.lot_id).unwrap_or(0L) + portion.quantity_g
+        consumed[portion.lot_id] = consumed.get(portion.lot_id).unwrap_or(0L) +
+          portion.quantity_g
       }
     }
   }
@@ -33,7 +34,8 @@ fn used_by_shipments(ledger : Ledger, as_of : Int64) -> Map[String, Int64] {
   let shipped : Map[String, Int64] = Map([])
   for shipment in ledger.shipments {
     if shipment.shipped_at <= as_of {
-      shipped[shipment.lot_id] = shipped.get(shipment.lot_id).unwrap_or(0L) + shipment.quantity_g
+      shipped[shipment.lot_id] = shipped.get(shipment.lot_id).unwrap_or(0L) +
+        shipment.quantity_g
     }
   }
   shipped
@@ -52,7 +54,13 @@ pub fn inventory_at(
     return Err(validation)
   }
   if !valid_time(as_of) {
-    return Err(report_from([issue("error", "invalid-cutoff", "inventory", "as_of must be a valid Unix second")]))
+    return Err(
+      report_from([
+        issue(
+          "error", "invalid-cutoff", "inventory", "as_of must be a valid Unix second",
+        ),
+      ]),
+    )
   }
   let consumed = used_by_processing(ledger, as_of)
   let shipped = used_by_shipments(ledger, as_of)
@@ -76,7 +84,10 @@ pub fn inventory_at(
 }
 
 ///|
-pub fn InventoryReport::for_lot(self : InventoryReport, id : String) -> InventoryRow? {
+pub fn InventoryReport::for_lot(
+  self : InventoryReport,
+  id : String,
+) -> InventoryRow? {
   for row in self.rows {
     if row.lot_id == id {
       return Some(row)

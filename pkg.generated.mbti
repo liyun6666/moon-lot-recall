@@ -1,0 +1,368 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "liyun6666/moon-lot-recall"
+
+import {
+  "moonbitlang/core/debug",
+  "moonbitlang/core/json",
+}
+
+// Values
+pub fn analyze(Ledger, RecallRequest) -> Result[RecallReport, ValidationReport]
+
+pub fn attribute_sources(Ledger, RecallRequest) -> Result[AttributionReport, ValidationReport]
+
+pub fn compare_cutoffs(Ledger, RecallRequest, Int64) -> Result[ImpactDelta, ValidationReport]
+
+pub fn decode_ledger(String) -> Result[Ledger, Diagnostic]
+
+pub fn decode_request(String) -> Result[RecallRequest, Diagnostic]
+
+pub fn encode_ledger(Ledger) -> String
+
+pub fn encode_report(RecallReport) -> String
+
+pub fn encode_request(RecallRequest) -> String
+
+pub fn encode_validation(ValidationReport) -> String
+
+pub fn group_consignees(Ledger, RecallRequest) -> Result[ConsigneeReport, ValidationReport]
+
+pub fn import_csv(String, String, String) -> Result[Ledger, ValidationReport]
+
+pub fn inventory_at(Ledger, Int64) -> Result[InventoryReport, ValidationReport]
+
+pub fn parse_csv(String) -> Result[CsvTable, Diagnostic]
+
+pub fn parse_response_events_csv(String) -> Result[Array[ResponseEvent], ValidationReport]
+
+pub fn parse_stock_counts_csv(String) -> Result[Array[StockCount], ValidationReport]
+
+pub fn plan_actions(Ledger, RecallRequest) -> Result[ActionPlan, ValidationReport]
+
+pub fn reconcile_stock(Ledger, Array[StockCount], Int64) -> Result[ReconciliationReport, ValidationReport]
+
+pub fn render_actions_markdown(ActionPlan) -> String
+
+pub fn render_consignees_csv(ConsigneeReport) -> String
+
+pub fn render_consignees_markdown(ConsigneeReport) -> String
+
+pub fn render_delta_markdown(ImpactDelta) -> String
+
+pub fn render_markdown(RecallReport) -> String
+
+pub fn render_readiness_markdown(ReadinessReport) -> String
+
+pub fn render_reconciliation_markdown(ReconciliationReport) -> String
+
+pub fn render_responses_markdown(ResponseReport) -> String
+
+pub fn render_shipments_csv(RecallReport) -> String
+
+pub fn render_upstream_markdown(UpstreamReport) -> String
+
+pub fn render_validation(ValidationReport) -> String
+
+pub fn review_readiness(Ledger, RecallRequest, Array[StockCount], Array[ResponseEvent]) -> Result[ReadinessReport, ValidationReport]
+
+pub fn review_responses(Ledger, RecallRequest, Array[ResponseEvent]) -> Result[ResponseReport, ValidationReport]
+
+pub fn trace_upstream(Ledger, String, Int64) -> Result[UpstreamReport, ValidationReport]
+
+pub fn validate_ledger(Ledger) -> ValidationReport
+
+pub fn validate_request(Ledger, RecallRequest) -> ValidationReport
+
+// Errors
+
+// Types and methods
+pub(all) struct ActionPlan {
+  recall_id : String
+  as_of : Int64
+  holds : Array[HoldAction]
+  contacts : Array[ContactAction]
+  estimated_hold_g : Int64
+  shipped_for_review_g : Int64
+} derive(ToJson, @debug.Debug, @json.FromJson)
+
+pub(all) struct AffectedLot {
+  lot_id : String
+  product : String
+  facility : String
+  quantity_g : Int64
+  classification : String
+  path : Array[ExposureStep]
+} derive(Eq, ToJson, @debug.Debug, @json.FromJson)
+
+pub(all) struct AffectedShipment {
+  shipment_id : String
+  lot_id : String
+  consignee : String
+  quantity_g : Int64
+  shipped_at : Int64
+  reference : String
+  path : Array[ExposureStep]
+} derive(Eq, ToJson, @debug.Debug, @json.FromJson)
+
+pub(all) struct AttributionReport {
+  recall_id : String
+  as_of : Int64
+  lots : Array[AttributionRow]
+  shipments : Array[ShipmentAttribution]
+} derive(ToJson, @debug.Debug, @json.FromJson)
+
+pub(all) struct AttributionRow {
+  lot_id : String
+  product : String
+  sources : Array[SourcePath]
+} derive(ToJson, @debug.Debug, @json.FromJson)
+
+pub(all) struct ConsigneePacket {
+  consignee : String
+  shipment_ids : Array[String]
+  lot_ids : Array[String]
+  references : Array[String]
+  total_quantity_g : Int64
+  earliest_shipment_at : Int64
+  latest_shipment_at : Int64
+} derive(Eq, ToJson, @debug.Debug, @json.FromJson)
+
+pub(all) struct ConsigneeReport {
+  recall_id : String
+  as_of : Int64
+  packets : Array[ConsigneePacket]
+  shipment_count : Int32
+  total_quantity_g : Int64
+} derive(Eq, ToJson, @debug.Debug, @json.FromJson)
+
+pub(all) struct ContactAction {
+  shipment_id : String
+  consignee : String
+  reference : String
+  quantity_g : Int64
+  lot_id : String
+  path : Array[ExposureStep]
+} derive(ToJson, @debug.Debug, @json.FromJson)
+
+pub(all) struct CsvRecord {
+  line : Int32
+  cells : Array[String]
+} derive(@debug.Debug)
+
+pub(all) struct CsvTable {
+  headers : Array[String]
+  rows : Array[CsvRecord]
+} derive(@debug.Debug)
+pub fn CsvTable::column(Self, String) -> Int32?
+pub fn CsvTable::has_exact_headers(Self, Array[String]) -> Bool
+
+pub(all) struct Diagnostic {
+  severity : String
+  code : String
+  entity : String
+  message : String
+} derive(Eq, ToJson, @debug.Debug, @json.FromJson)
+
+pub(all) struct ExposureStep {
+  from_lot : String
+  transformation_id : String
+  to_lot : String
+  occurred_at : Int64
+} derive(Eq, ToJson, @debug.Debug, @json.FromJson)
+
+pub(all) struct HoldAction {
+  lot_id : String
+  facility : String
+  product : String
+  estimated_on_hand_g : Int64
+  classification : String
+  path : Array[ExposureStep]
+} derive(ToJson, @debug.Debug, @json.FromJson)
+
+pub(all) struct ImpactDelta {
+  recall_id : String
+  previous_as_of : Int64
+  current_as_of : Int64
+  previous_lot_count : Int32
+  current_lot_count : Int32
+  previous_shipment_count : Int32
+  current_shipment_count : Int32
+  new_lots : Array[AffectedLot]
+  new_shipments : Array[AffectedShipment]
+  newly_shipped_g : Int64
+} derive(Eq, ToJson, @debug.Debug, @json.FromJson)
+
+pub(all) struct InventoryReport {
+  as_of : Int64
+  rows : Array[InventoryRow]
+} derive(ToJson, @debug.Debug, @json.FromJson)
+pub fn InventoryReport::for_lot(Self, String) -> InventoryRow?
+
+pub(all) struct InventoryRow {
+  lot_id : String
+  product : String
+  facility : String
+  produced_g : Int64
+  processed_g : Int64
+  shipped_g : Int64
+  on_hand_g : Int64
+} derive(ToJson, @debug.Debug, @json.FromJson)
+
+pub(all) struct Ledger {
+  schema_version : Int32
+  lots : Array[Lot]
+  transformations : Array[Transformation]
+  shipments : Array[Shipment]
+} derive(Eq, ToJson, @debug.Debug, @json.FromJson)
+
+pub(all) struct Lot {
+  id : String
+  product : String
+  facility : String
+  quantity_g : Int64
+  produced_at : Int64
+} derive(Eq, ToJson, @debug.Debug, @json.FromJson)
+
+pub(all) struct Portion {
+  lot_id : String
+  quantity_g : Int64
+} derive(Eq, ToJson, @debug.Debug, @json.FromJson)
+
+pub(all) struct ReadinessItem {
+  category : String
+  entity_id : String
+  detail : String
+} derive(Eq, ToJson, @debug.Debug, @json.FromJson)
+
+pub(all) struct ReadinessReport {
+  recall_id : String
+  as_of : Int64
+  affected_lot_count : Int32
+  affected_shipment_count : Int32
+  physical_count_count : Int32
+  acknowledged_shipment_count : Int32
+  items : Array[ReadinessItem]
+  evidence_review_complete : Bool
+} derive(Eq, ToJson, @debug.Debug, @json.FromJson)
+
+pub(all) struct RecallReport {
+  recall_id : String
+  as_of : Int64
+  affected_lots : Array[AffectedLot]
+  affected_shipments : Array[AffectedShipment]
+  diagnostics : Array[Diagnostic]
+} derive(Eq, ToJson, @debug.Debug, @json.FromJson)
+
+pub(all) struct RecallRequest {
+  id : String
+  reason : String
+  seed_lots : Array[String]
+  as_of : Int64
+} derive(Eq, ToJson, @debug.Debug, @json.FromJson)
+
+pub(all) struct ReconciliationReport {
+  as_of : Int64
+  rows : Array[ReconciliationRow]
+  missing_counts : Array[String]
+  total_expected_g : Int64
+  total_counted_g : Int64
+  balanced : Bool
+} derive(Eq, ToJson, @debug.Debug, @json.FromJson)
+
+pub(all) struct ReconciliationRow {
+  lot_id : String
+  facility : String
+  expected_g : Int64
+  counted_g : Int64
+  difference_g : Int64
+  status : String
+  count_reference : String
+} derive(Eq, ToJson, @debug.Debug, @json.FromJson)
+
+pub(all) struct ResponseEvent {
+  shipment_id : String
+  status : String
+  recorded_at : Int64
+  reference : String
+  note : String
+} derive(Eq, ToJson, @debug.Debug, @json.FromJson)
+
+pub(all) struct ResponseReport {
+  recall_id : String
+  rows : Array[ResponseRow]
+  pending_count : Int32
+  attempted_count : Int32
+  reached_count : Int32
+  acknowledged_count : Int32
+  failed_count : Int32
+} derive(Eq, ToJson, @debug.Debug, @json.FromJson)
+
+pub(all) struct ResponseRow {
+  shipment_id : String
+  consignee : String
+  lot_id : String
+  quantity_g : Int64
+  status : String
+  history : Array[ResponseEvent]
+} derive(Eq, ToJson, @debug.Debug, @json.FromJson)
+
+pub(all) struct Shipment {
+  id : String
+  lot_id : String
+  quantity_g : Int64
+  consignee : String
+  shipped_at : Int64
+  reference : String
+} derive(Eq, ToJson, @debug.Debug, @json.FromJson)
+
+pub(all) struct ShipmentAttribution {
+  shipment_id : String
+  lot_id : String
+  consignee : String
+  sources : Array[SourcePath]
+} derive(ToJson, @debug.Debug, @json.FromJson)
+
+pub(all) struct SourcePath {
+  seed_lot : String
+  path : Array[ExposureStep]
+} derive(ToJson, @debug.Debug, @json.FromJson)
+
+pub(all) struct StockCount {
+  lot_id : String
+  facility : String
+  counted_g : Int64
+  counted_at : Int64
+  reference : String
+} derive(Eq, ToJson, @debug.Debug, @json.FromJson)
+
+pub(all) struct Transformation {
+  id : String
+  facility : String
+  occurred_at : Int64
+  inputs : Array[Portion]
+  outputs : Array[Portion]
+} derive(Eq, ToJson, @debug.Debug, @json.FromJson)
+
+pub(all) struct UpstreamLot {
+  lot_id : String
+  product : String
+  facility : String
+  quantity_g : Int64
+  is_source : Bool
+  path_to_target : Array[ExposureStep]
+} derive(ToJson, @debug.Debug, @json.FromJson)
+
+pub(all) struct UpstreamReport {
+  target_lot : String
+  as_of : Int64
+  lots : Array[UpstreamLot]
+} derive(ToJson, @debug.Debug, @json.FromJson)
+
+pub(all) struct ValidationReport {
+  valid : Bool
+  diagnostics : Array[Diagnostic]
+} derive(Eq, ToJson, @debug.Debug, @json.FromJson)
+
+// Type aliases
+
+// Traits

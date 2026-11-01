@@ -42,7 +42,7 @@ pub(all) struct Shipment {
 /// The document contains only operational facts. Recall decisions live in a
 /// separate request so the same ledger can be queried repeatedly.
 pub(all) struct Ledger {
-  schema_version : Int
+  schema_version : Int32
   lots : Array[Lot]
   transformations : Array[Transformation]
   shipments : Array[Shipment]

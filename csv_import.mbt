@@ -4,19 +4,42 @@ fn table_error(table : String, code : String, message : String) -> Diagnostic {
 }
 
 ///|
-fn expect_headers(table : CsvTable, name : String, headers : Array[String]) -> Diagnostic? {
+fn expect_headers(
+  table : CsvTable,
+  name : String,
+  headers : Array[String],
+) -> Diagnostic? {
   if table.has_exact_headers(headers) {
     None
   } else {
-    Some(table_error(name, "csv-schema", "expected columns in order: \{headers.join(",")}"))
+    Some(
+      table_error(
+        name,
+        "csv-schema",
+        "expected columns in order: \{headers.join(",")}",
+      ),
+    )
   }
 }
 
 ///|
-fn csv_int(cell : String, file : String, line : Int, field : String, findings : Array[Diagnostic]) -> Int64? {
+fn csv_int(
+  cell : String,
+  file : String,
+  line : Int32,
+  field : String,
+  findings : Array[Diagnostic],
+) -> Int64? {
   let value = @string.parse_int64(cell.trim()) catch {
     _ => {
-      findings.push(issue("error", "csv-invalid-integer", "\{file}:\{line}", "\{field} must be an exact signed integer"))
+      findings.push(
+        issue(
+          "error",
+          "csv-invalid-integer",
+          "\{file}:\{line}",
+          "\{field} must be an exact signed integer",
+        ),
+      )
       return None
     }
   }
@@ -27,17 +50,19 @@ fn csv_int(cell : String, file : String, line : Int, field : String, findings : 
 fn parse_lots_csv(table : CsvTable, findings : Array[Diagnostic]) -> Array[Lot] {
   let lots : Array[Lot] = []
   for row in table.rows {
-    match (
-      csv_int(row.cells[3], "lots.csv", row.line, "quantity_g", findings),
-      csv_int(row.cells[4], "lots.csv", row.line, "produced_at", findings),
-    ) {
-      (Some(quantity_g), Some(produced_at)) => lots.push({
-        id: row.cells[0],
-        product: row.cells[1],
-        facility: row.cells[2],
-        quantity_g,
-        produced_at,
-      })
+    match
+      (
+        csv_int(row.cells[3], "lots.csv", row.line, "quantity_g", findings),
+        csv_int(row.cells[4], "lots.csv", row.line, "produced_at", findings),
+      ) {
+      (Some(quantity_g), Some(produced_at)) =>
+        lots.push({
+          id: row.cells[0],
+          product: row.cells[1],
+          facility: row.cells[2],
+          quantity_g,
+          produced_at,
+        })
       _ => ()
     }
   }
@@ -50,16 +75,35 @@ fn parse_transformations_csv(
   findings : Array[Diagnostic],
 ) -> Array[Transformation] {
   let transformations : Array[Transformation] = []
-  let positions : Map[String, Int] = Map([])
+  let positions : Map[String, Int32] = Map([])
   for row in table.rows {
     let id = row.cells[0]
     let facility = row.cells[1]
-    let time = csv_int(row.cells[2], "transformations.csv", row.line, "occurred_at", findings)
+    let time = csv_int(
+      row.cells[2],
+      "transformations.csv",
+      row.line,
+      "occurred_at",
+      findings,
+    )
     let direction = row.cells[3]
     let lot_id = row.cells[4]
-    let quantity = csv_int(row.cells[5], "transformations.csv", row.line, "quantity_g", findings)
+    let quantity = csv_int(
+      row.cells[5],
+      "transformations.csv",
+      row.line,
+      "quantity_g",
+      findings,
+    )
     if direction != "input" && direction != "output" {
-      findings.push(issue("error", "csv-invalid-direction", "transformations.csv:\{row.line}", "direction must be input or output"))
+      findings.push(
+        issue(
+          "error",
+          "csv-invalid-direction",
+          "transformations.csv:\{row.line}",
+          "direction must be input or output",
+        ),
+      )
       continue
     }
     match (time, quantity) {
@@ -68,14 +112,27 @@ fn parse_transformations_csv(
           Some(existing) => existing
           None => {
             let next = transformations.length()
-            transformations.push({ id, facility, occurred_at, inputs: [], outputs: [], })
+            transformations.push({
+              id,
+              facility,
+              occurred_at,
+              inputs: [],
+              outputs: [],
+            })
             positions[id] = next
             next
           }
         }
         let existing = transformations[position]
         if existing.facility != facility || existing.occurred_at != occurred_at {
-          findings.push(issue("error", "csv-event-conflict", "transformations.csv:\{row.line}", "same event id has conflicting facility or time"))
+          findings.push(
+            issue(
+              "error",
+              "csv-event-conflict",
+              "transformations.csv:\{row.line}",
+              "same event id has conflicting facility or time",
+            ),
+          )
           continue
         }
         let portion : Portion = { lot_id, quantity_g, }
@@ -92,21 +149,26 @@ fn parse_transformations_csv(
 }
 
 ///|
-fn parse_shipments_csv(table : CsvTable, findings : Array[Diagnostic]) -> Array[Shipment] {
+fn parse_shipments_csv(
+  table : CsvTable,
+  findings : Array[Diagnostic],
+) -> Array[Shipment] {
   let shipments : Array[Shipment] = []
   for row in table.rows {
-    match (
-      csv_int(row.cells[2], "shipments.csv", row.line, "quantity_g", findings),
-      csv_int(row.cells[4], "shipments.csv", row.line, "shipped_at", findings),
-    ) {
-      (Some(quantity_g), Some(shipped_at)) => shipments.push({
-        id: row.cells[0],
-        lot_id: row.cells[1],
-        quantity_g,
-        consignee: row.cells[3],
-        shipped_at,
-        reference: row.cells[5],
-      })
+    match
+      (
+        csv_int(row.cells[2], "shipments.csv", row.line, "quantity_g", findings),
+        csv_int(row.cells[4], "shipments.csv", row.line, "shipped_at", findings),
+      ) {
+      (Some(quantity_g), Some(shipped_at)) =>
+        shipments.push({
+          id: row.cells[0],
+          lot_id: row.cells[1],
+          quantity_g,
+          consignee: row.cells[3],
+          shipped_at,
+          reference: row.cells[5],
+        })
       _ => ()
     }
   }
@@ -144,17 +206,26 @@ pub fn import_csv(
     }
   }
   if lots_table is Some(table) {
-    if expect_headers(table, "lots.csv", ["id", "product", "facility", "quantity_g", "produced_at"]) is Some(error) {
+    if expect_headers(table, "lots.csv", [
+        "id", "product", "facility", "quantity_g", "produced_at",
+      ])
+      is Some(error) {
       findings.push(error)
     }
   }
   if transformations_table is Some(table) {
-    if expect_headers(table, "transformations.csv", ["id", "facility", "occurred_at", "direction", "lot_id", "quantity_g"]) is Some(error) {
+    if expect_headers(table, "transformations.csv", [
+        "id", "facility", "occurred_at", "direction", "lot_id", "quantity_g",
+      ])
+      is Some(error) {
       findings.push(error)
     }
   }
   if shipments_table is Some(table) {
-    if expect_headers(table, "shipments.csv", ["id", "lot_id", "quantity_g", "consignee", "shipped_at", "reference"]) is Some(error) {
+    if expect_headers(table, "shipments.csv", [
+        "id", "lot_id", "quantity_g", "consignee", "shipped_at", "reference",
+      ])
+      is Some(error) {
       findings.push(error)
     }
   }
@@ -178,5 +249,9 @@ pub fn import_csv(
   }
   let ledger : Ledger = { schema_version: 1, lots, transformations, shipments, }
   let validation = validate_ledger(ledger)
-  if validation.valid { Ok(ledger) } else { Err(validation) }
+  if validation.valid {
+    Ok(ledger)
+  } else {
+    Err(validation)
+  }
 }

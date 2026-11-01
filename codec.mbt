@@ -1,10 +1,17 @@
 ///|
 fn decode_json(text : String, kind : String) -> Result[Json, Diagnostic] {
   if text.length() > 16000000 {
-    return Err(issue("error", "input-too-large", kind, "JSON input exceeds 16 million UTF-16 code units"))
+    return Err(
+      issue(
+        "error", "input-too-large", kind, "JSON input exceeds 16 million UTF-16 code units",
+      ),
+    )
   }
   let json = @json.parse(text, reject_duplicate_keys=true) catch {
-    error => return Err(issue("error", "invalid-json", kind, "JSON parse failed: \{error}"))
+    error =>
+      return Err(
+        issue("error", "invalid-json", kind, "JSON parse failed: \{error}"),
+      )
   }
   Ok(json)
 }
@@ -17,7 +24,15 @@ pub fn decode_ledger(text : String) -> Result[Ledger, Diagnostic] {
     Err(error) => Err(error)
     Ok(json) => {
       let ledger : Ledger = @json.from_json(json) catch {
-        error => return Err(issue("error", "invalid-ledger-shape", "ledger", "JSON shape failed: \{error}"))
+        error =>
+          return Err(
+            issue(
+              "error",
+              "invalid-ledger-shape",
+              "ledger",
+              "JSON shape failed: \{error}",
+            ),
+          )
       }
       Ok(ledger)
     }
@@ -30,7 +45,15 @@ pub fn decode_request(text : String) -> Result[RecallRequest, Diagnostic] {
     Err(error) => Err(error)
     Ok(json) => {
       let request : RecallRequest = @json.from_json(json) catch {
-        error => return Err(issue("error", "invalid-request-shape", "recall", "JSON shape failed: \{error}"))
+        error =>
+          return Err(
+            issue(
+              "error",
+              "invalid-request-shape",
+              "recall",
+              "JSON shape failed: \{error}",
+            ),
+          )
       }
       Ok(request)
     }

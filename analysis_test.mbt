@@ -1,7 +1,10 @@
 ///|
 test "seed flour reaches mixed cracker and its consignee" {
   let request : @moon-lot-recall.RecallRequest = {
-    id: "CASE-1", reason: "supplier notice", seed_lots: ["RAW-1"], as_of: 40L,
+    id: "CASE-1",
+    reason: "supplier notice",
+    seed_lots: ["RAW-1"],
+    as_of: 40L,
   }
   let outcome = @moon-lot-recall.analyze(sample_ledger(), request)
   match outcome {
@@ -19,7 +22,10 @@ test "seed flour reaches mixed cracker and its consignee" {
 ///|
 test "unrelated ingredient does not become an affected lot" {
   let request : @moon-lot-recall.RecallRequest = {
-    id: "CASE-2", reason: "supplier notice", seed_lots: ["RAW-1"], as_of: 40L,
+    id: "CASE-2",
+    reason: "supplier notice",
+    seed_lots: ["RAW-1"],
+    as_of: 40L,
   }
   match @moon-lot-recall.analyze(sample_ledger(), request) {
     Err(_) => fail("valid fixture must be accepted")
@@ -33,7 +39,10 @@ test "unrelated ingredient does not become an affected lot" {
 ///|
 test "cutoff excludes future processing and shipments" {
   let request : @moon-lot-recall.RecallRequest = {
-    id: "CASE-3", reason: "supplier notice", seed_lots: ["RAW-1"], as_of: 15L,
+    id: "CASE-3",
+    reason: "supplier notice",
+    seed_lots: ["RAW-1"],
+    as_of: 15L,
   }
   match @moon-lot-recall.analyze(sample_ledger(), request) {
     Err(_) => fail("valid fixture must be accepted")
@@ -49,7 +58,10 @@ test "invalid ledger fails closed" {
   let ledger = sample_ledger()
   ledger.shipments[0] = { ..ledger.shipments[0], quantity_g: 2000L, }
   let request : @moon-lot-recall.RecallRequest = {
-    id: "CASE-4", reason: "supplier notice", seed_lots: ["RAW-1"], as_of: 40L,
+    id: "CASE-4",
+    reason: "supplier notice",
+    seed_lots: ["RAW-1"],
+    as_of: 40L,
   }
   match @moon-lot-recall.analyze(ledger, request) {
     Err(report) => assert_false(report.valid)
@@ -61,17 +73,25 @@ test "invalid ledger fails closed" {
 test "two-stage processing preserves the complete path" {
   let ledger = sample_ledger()
   ledger.lots.push({
-    id: "PACK-1", product: "boxed cracker", facility: "Mill A",
-    quantity_g: 800L, produced_at: 40L,
+    id: "PACK-1",
+    product: "boxed cracker",
+    facility: "Mill A",
+    quantity_g: 800L,
+    produced_at: 40L,
   })
   ledger.transformations.push({
-    id: "PACKING-1", facility: "Mill A", occurred_at: 40L,
+    id: "PACKING-1",
+    facility: "Mill A",
+    occurred_at: 40L,
     inputs: [{ lot_id: "CAKE-1", quantity_g: 800L, }],
     outputs: [{ lot_id: "PACK-1", quantity_g: 800L, }],
   })
   ledger.shipments[0] = { ..ledger.shipments[0], quantity_g: 100L, }
   let request : @moon-lot-recall.RecallRequest = {
-    id: "CASE-5", reason: "supplier notice", seed_lots: ["RAW-1"], as_of: 50L,
+    id: "CASE-5",
+    reason: "supplier notice",
+    seed_lots: ["RAW-1"],
+    as_of: 50L,
   }
   match @moon-lot-recall.analyze(ledger, request) {
     Err(_) => fail("valid fixture must be accepted")

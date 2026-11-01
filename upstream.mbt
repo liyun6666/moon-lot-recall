@@ -16,7 +16,10 @@ pub(all) struct UpstreamReport {
 } derive(Debug, ToJson, FromJson)
 
 ///|
-fn incoming_edges(ledger : Ledger, as_of : Int64) -> Map[String, Array[ExposureStep]] {
+fn incoming_edges(
+  ledger : Ledger,
+  as_of : Int64,
+) -> Map[String, Array[ExposureStep]] {
   let incoming : Map[String, Array[ExposureStep]] = Map([])
   for transformation in ledger.transformations {
     if transformation.occurred_at > as_of {
@@ -39,7 +42,10 @@ fn incoming_edges(ledger : Ledger, as_of : Int64) -> Map[String, Array[ExposureS
 }
 
 ///|
-fn upstream_path(start : String, next_step : Map[String, ExposureStep]) -> Array[ExposureStep] {
+fn upstream_path(
+  start : String,
+  next_step : Map[String, ExposureStep],
+) -> Array[ExposureStep] {
   let path : Array[ExposureStep] = []
   let mut current = start
   for _ in 0..<100001 {
@@ -76,12 +82,24 @@ pub fn trace_upstream(
     }
   }
   match target {
-    None => return Err(report_from([issue("error", "unknown-target", target_lot, "target lot does not exist")]))
-    Some(lot) => {
+    None =>
+      return Err(
+        report_from([
+          issue(
+            "error", "unknown-target", target_lot, "target lot does not exist",
+          ),
+        ]),
+      )
+    Some(lot) =>
       if !valid_time(as_of) || lot.produced_at > as_of {
-        return Err(report_from([issue("error", "invalid-target-cutoff", target_lot, "target lot does not exist at cutoff")]))
+        return Err(
+          report_from([
+            issue(
+              "error", "invalid-target-cutoff", target_lot, "target lot does not exist at cutoff",
+            ),
+          ]),
+        )
       }
-    }
   }
   let incoming = incoming_edges(ledger, as_of)
   let visited : Map[String, Bool] = Map([])

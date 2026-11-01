@@ -29,7 +29,10 @@ test "inventory cutoff excludes future output lot" {
 ///|
 test "action plan separates on-hand hold and shipment contact" {
   let request : @moon-lot-recall.RecallRequest = {
-    id: "CASE-ACT", reason: "supplier notice", seed_lots: ["RAW-1"], as_of: 40L,
+    id: "CASE-ACT",
+    reason: "supplier notice",
+    seed_lots: ["RAW-1"],
+    as_of: 40L,
   }
   match @moon-lot-recall.plan_actions(sample_ledger(), request) {
     Err(_) => fail("valid case should produce actions")

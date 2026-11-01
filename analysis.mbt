@@ -1,5 +1,8 @@
 ///|
-fn exposure_edges(ledger : Ledger, as_of : Int64) -> Map[String, Array[ExposureStep]] {
+fn exposure_edges(
+  ledger : Ledger,
+  as_of : Int64,
+) -> Map[String, Array[ExposureStep]] {
   let edges : Map[String, Array[ExposureStep]] = Map([])
   for transformation in ledger.transformations {
     if transformation.occurred_at > as_of {
@@ -22,7 +25,10 @@ fn exposure_edges(ledger : Ledger, as_of : Int64) -> Map[String, Array[ExposureS
 }
 
 ///|
-fn path_to(lot_id : String, parents : Map[String, ExposureStep]) -> Array[ExposureStep] {
+fn path_to(
+  lot_id : String,
+  parents : Map[String, ExposureStep],
+) -> Array[ExposureStep] {
   let backwards : Array[ExposureStep] = []
   let mut current = lot_id
   for _ in 0..<100001 {
@@ -100,7 +106,11 @@ pub fn analyze(
         product: lot.product,
         facility: lot.facility,
         quantity_g: lot.quantity_g,
-        classification: if seeds.contains(lot.id) { "seed" } else { "potential" },
+        classification: if seeds.contains(lot.id) {
+          "seed"
+        } else {
+          "potential"
+        },
         path: path_to(lot.id, parents),
       })
     }

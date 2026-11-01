@@ -1,6 +1,6 @@
 ///|
 pub(all) struct CsvRecord {
-  line : Int
+  line : Int32
   cells : Array[String]
 } derive(Debug)
 
@@ -11,7 +11,7 @@ pub(all) struct CsvTable {
 } derive(Debug)
 
 ///|
-fn csv_error(code : String, line : Int, message : String) -> Diagnostic {
+fn csv_error(code : String, line : Int32, message : String) -> Diagnostic {
   issue("error", code, "csv:\{line}", message)
 }
 
@@ -20,7 +20,7 @@ fn finish_csv_row(
   rows : Array[CsvRecord],
   cells : Array[String],
   field : StringBuilder,
-  line : Int,
+  line : Int32,
 ) -> Unit {
   cells.push(field.to_string())
   rows.push({ line, cells: cells.copy(), })
@@ -34,9 +34,13 @@ fn finish_csv_row(
 /// row number rather than silently shifting columns.
 pub fn parse_csv(text : String) -> Result[CsvTable, Diagnostic] {
   if text.length() > 16000000 {
-    return Err(csv_error("csv-too-large", 1, "CSV input exceeds 16 million code units"))
+    return Err(
+      csv_error("csv-too-large", 1, "CSV input exceeds 16 million code units"),
+    )
   }
-  let normalized = text.replace_all(old="\r\n", new="\n").replace_all(old="\r", new="\n")
+  let normalized = text
+    .replace_all(old="\r\n", new="\n")
+    .replace_all(old="\r", new="\n")
   let rows : Array[CsvRecord] = []
   let cells : Array[String] = []
   let field = StringBuilder()
@@ -81,13 +85,19 @@ pub fn parse_csv(text : String) -> Result[CsvTable, Diagnostic] {
         line += 1
         row_line = line
       } else {
-        return Err(csv_error("csv-trailing-character", line, "only a comma or newline may follow a closing quote"))
+        return Err(
+          csv_error(
+            "csv-trailing-character", line, "only a comma or newline may follow a closing quote",
+          ),
+        )
       }
       continue
     }
     if char == '"' {
       if field_started {
-        return Err(csv_error("csv-bare-quote", line, "quote inside an unquoted field"))
+        return Err(
+          csv_error("csv-bare-quote", line, "quote inside an unquoted field"),
+        )
       }
       quoted = true
       field_started = true
@@ -105,11 +115,15 @@ pub fn parse_csv(text : String) -> Result[CsvTable, Diagnostic] {
       field_started = true
     }
     if cells.length() > 64 || rows.length() > 100000 {
-      return Err(csv_error("csv-limit", line, "CSV exceeds the row or column limit"))
+      return Err(
+        csv_error("csv-limit", line, "CSV exceeds the row or column limit"),
+      )
     }
   }
   if quoted && !quote_pending {
-    return Err(csv_error("csv-unclosed-quote", line, "quoted field is not closed"))
+    return Err(
+      csv_error("csv-unclosed-quote", line, "quoted field is not closed"),
+    )
   }
   if quote_pending {
     quoted = false
@@ -125,10 +139,18 @@ pub fn parse_csv(text : String) -> Result[CsvTable, Diagnostic] {
   let seen : Map[String, Bool] = Map([])
   for header in headers {
     if header.trim().is_empty() {
-      return Err(csv_error("csv-empty-header", 1, "header names cannot be empty"))
+      return Err(
+        csv_error("csv-empty-header", 1, "header names cannot be empty"),
+      )
     }
     if seen.contains(header) {
-      return Err(csv_error("csv-duplicate-header", 1, "header name is repeated: \{header}"))
+      return Err(
+        csv_error(
+          "csv-duplicate-header",
+          1,
+          "header name is repeated: \{header}",
+        ),
+      )
     }
     seen[header] = true
   }
@@ -136,7 +158,13 @@ pub fn parse_csv(text : String) -> Result[CsvTable, Diagnostic] {
   for i in 1..<rows.length() {
     let row = rows[i]
     if row.cells.length() != headers.length() {
-      return Err(csv_error("csv-column-count", row.line, "row has \{row.cells.length()} cells; expected \{headers.length()}"))
+      return Err(
+        csv_error(
+          "csv-column-count",
+          row.line,
+          "row has \{row.cells.length()} cells; expected \{headers.length()}",
+        ),
+      )
     }
     records.push(row)
   }
@@ -144,7 +172,7 @@ pub fn parse_csv(text : String) -> Result[CsvTable, Diagnostic] {
 }
 
 ///|
-pub fn CsvTable::column(self : CsvTable, name : String) -> Int? {
+pub fn CsvTable::column(self : CsvTable, name : String) -> Int32? {
   for index, header in self.headers {
     if header == name {
       return Some(index)
@@ -154,7 +182,10 @@ pub fn CsvTable::column(self : CsvTable, name : String) -> Int? {
 }
 
 ///|
-pub fn CsvTable::has_exact_headers(self : CsvTable, expected : Array[String]) -> Bool {
+pub fn CsvTable::has_exact_headers(
+  self : CsvTable,
+  expected : Array[String],
+) -> Bool {
   if self.headers.length() != expected.length() {
     return false
   }
