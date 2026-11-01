@@ -105,7 +105,7 @@ pub fn analyze(
       })
     }
   }
-  affected_lots.sort_by_key(item => item.lot_id)
+  // Preserve ledger order so report rows can be compared to source records.
   let affected_shipments : Array[AffectedShipment] = []
   for shipment in ledger.shipments {
     if shipment.shipped_at <= request.as_of && visited.contains(shipment.lot_id) {
@@ -120,7 +120,7 @@ pub fn analyze(
       })
     }
   }
-  affected_shipments.sort_by_key(item => item.shipment_id)
+  // Shipment order likewise follows the submitted evidence.
   Ok({
     recall_id: request.id,
     as_of: request.as_of,

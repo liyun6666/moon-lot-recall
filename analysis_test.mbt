@@ -24,8 +24,8 @@ test "unrelated ingredient does not become an affected lot" {
   match @moon-lot-recall.analyze(sample_ledger(), request) {
     Err(_) => fail("valid fixture must be accepted")
     Ok(report) => {
-      assert_eq(report.affected_lots[0].lot_id, "CAKE-1")
-      assert_eq(report.affected_lots[1].lot_id, "RAW-1")
+      assert_eq(report.affected_lots[0].lot_id, "RAW-1")
+      assert_eq(report.affected_lots[1].lot_id, "CAKE-1")
     }
   }
 }
@@ -77,7 +77,7 @@ test "two-stage processing preserves the complete path" {
     Err(_) => fail("valid fixture must be accepted")
     Ok(report) => {
       assert_eq(report.affected_lots.length(), 3)
-      let packed = report.affected_lots[1]
+      let packed = report.affected_lots[2]
       assert_eq(packed.lot_id, "PACK-1")
       assert_eq(packed.path.length(), 2)
       assert_eq(packed.path[0].transformation_id, "MIX-1")
