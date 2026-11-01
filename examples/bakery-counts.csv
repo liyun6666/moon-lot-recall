@@ -1,0 +1,7 @@
+lot_id,facility,counted_g,counted_at,reference
+FLOUR-A,Bakery One,1000,500,COUNT-501
+FLOUR-B,Bakery One,500,500,COUNT-502
+SALT-A,Bakery One,0,500,COUNT-503
+DOUGH-A,Bakery One,0,500,COUNT-504
+BREAD-A,Bakery One,2950,500,COUNT-505
+BREAD-B,Bakery One,1000,500,COUNT-506

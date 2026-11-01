@@ -1,0 +1,32 @@
+name: MoonBit CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+      - name: Install MoonBit
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+      - name: Show toolchain
+        run: moon version --all
+      - name: Resolve dependencies
+        run: moon update
+      - name: Check formatting
+        run: moon fmt --check
+      - name: Check types and warnings
+        run: moon check --target js --warn-list=-implicit_impl_as_method --deny-warn
+      - name: Run unit and scenario tests
+        run: moon test --target js --warn-list=-implicit_impl_as_method --deny-warn
+      - name: Validate example ledger
+        run: moon run cmd/main --target js --warn-list=-implicit_impl_as_method -- validate examples/bakery-ledger.json
+      - name: Run end-to-end evidence review
+        run: moon run cmd/main --target js --warn-list=-implicit_impl_as_method -- readiness examples/bakery-ledger.json examples/bakery-recall.json examples/bakery-counts.csv examples/bakery-responses.csv json

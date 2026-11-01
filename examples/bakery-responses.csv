@@ -1,0 +1,4 @@
+shipment_id,status,recorded_at,reference,note
+OUT-101,reached,501,CALL-601,Store manager informed
+OUT-101,acknowledged,502,ACK-602,Written confirmation received
+OUT-102,attempted,501,CALL-603,No answer yet

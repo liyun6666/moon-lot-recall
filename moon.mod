@@ -13,18 +13,18 @@ name = "liyun6666/moon-lot-recall"
 
 version = "0.1.0"
 
-readme = "README.mbt.md"
+readme = "README.md"
 
 repository = "https://github.com/liyun6666/moon-lot-recall"
 
 license = "Apache-2.0"
 
-keywords = ["food-safety", "recall", "traceability", "lot", "audit"]
+keywords = [ "food-safety", "recall", "traceability", "lot", "audit" ]
 
 preferred_target = "js"
 
-description = "Offline food-lot recall impact tracing with evidence paths and conservative diagnostics"
+description = "Offline food lot recall impact tracing and evidence review"
 
 import {
-    "moonbitlang/x@0.5.7",
+  "moonbitlang/x@0.5.7",
 }
