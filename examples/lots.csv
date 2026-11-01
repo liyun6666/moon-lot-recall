@@ -1,0 +1,7 @@
+id,product,facility,quantity_g,produced_at
+FLOUR-A,wheat flour,Bakery One,10000,100
+FLOUR-B,wheat flour,Bakery One,5000,100
+SALT-A,salt,Bakery One,500,100
+DOUGH-A,bread dough,Bakery One,9500,200
+BREAD-A,loaf,Bakery One,9000,300
+BREAD-B,loaf,Bakery One,4000,300

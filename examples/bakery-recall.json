@@ -1,0 +1,6 @@
+{
+  "id": "SUPPLIER-NOTICE-001",
+  "reason": "Supplier reports that FLOUR-A requires investigation",
+  "seed_lots": ["FLOUR-A"],
+  "as_of": "500"
+}

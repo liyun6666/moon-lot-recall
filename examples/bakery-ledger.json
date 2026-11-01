@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "lots": [
+    {"id":"FLOUR-A","product":"wheat flour","facility":"Bakery One","quantity_g":"10000","produced_at":"100"},
+    {"id":"FLOUR-B","product":"wheat flour","facility":"Bakery One","quantity_g":"5000","produced_at":"100"},
+    {"id":"SALT-A","product":"salt","facility":"Bakery One","quantity_g":"500","produced_at":"100"},
+    {"id":"DOUGH-A","product":"bread dough","facility":"Bakery One","quantity_g":"9500","produced_at":"200"},
+    {"id":"BREAD-A","product":"loaf","facility":"Bakery One","quantity_g":"9000","produced_at":"300"},
+    {"id":"BREAD-B","product":"loaf","facility":"Bakery One","quantity_g":"4000","produced_at":"300"}
+  ],
+  "transformations": [
+    {"id":"MIX-A","facility":"Bakery One","occurred_at":"200","inputs":[{"lot_id":"FLOUR-A","quantity_g":"9000"},{"lot_id":"SALT-A","quantity_g":"500"}],"outputs":[{"lot_id":"DOUGH-A","quantity_g":"9500"}]},
+    {"id":"BAKE-A","facility":"Bakery One","occurred_at":"300","inputs":[{"lot_id":"DOUGH-A","quantity_g":"9500"}],"outputs":[{"lot_id":"BREAD-A","quantity_g":"9000"}]},
+    {"id":"BAKE-B","facility":"Bakery One","occurred_at":"300","inputs":[{"lot_id":"FLOUR-B","quantity_g":"4500"}],"outputs":[{"lot_id":"BREAD-B","quantity_g":"4000"}]}
+  ],
+  "shipments": [
+    {"id":"OUT-101","lot_id":"BREAD-A","quantity_g":"4000","consignee":"Market East","shipped_at":"400","reference":"INV-101"},
+    {"id":"OUT-102","lot_id":"BREAD-A","quantity_g":"2000","consignee":"Market West","shipped_at":"401","reference":"INV-102"},
+    {"id":"OUT-103","lot_id":"BREAD-B","quantity_g":"3000","consignee":"Market East","shipped_at":"402","reference":"INV-103"}
+  ]
+}

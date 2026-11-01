@@ -1,0 +1,8 @@
+id,facility,occurred_at,direction,lot_id,quantity_g
+MIX-A,Bakery One,200,input,FLOUR-A,9000
+MIX-A,Bakery One,200,input,SALT-A,500
+MIX-A,Bakery One,200,output,DOUGH-A,9500
+BAKE-A,Bakery One,300,input,DOUGH-A,9500
+BAKE-A,Bakery One,300,output,BREAD-A,9000
+BAKE-B,Bakery One,300,input,FLOUR-B,4500
+BAKE-B,Bakery One,300,output,BREAD-B,4000

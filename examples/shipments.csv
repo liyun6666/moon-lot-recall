@@ -1,0 +1,4 @@
+id,lot_id,quantity_g,consignee,shipped_at,reference
+OUT-101,BREAD-A,4000,Market East,400,INV-101
+OUT-102,BREAD-A,2000,Market West,401,INV-102
+OUT-103,BREAD-B,3000,Market East,402,INV-103

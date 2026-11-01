@@ -1,0 +1,10 @@
+import {
+  "liyun6666/moon-lot-recall" @lib,
+  "moonbitlang/x/fs" @fs,
+  "moonbitlang/x/sys" @sys,
+  "moonbitlang/core/env" @env,
+  "moonbitlang/core/json" @json,
+  "moonbitlang/core/string" @string,
+}
+
+pkgtype(kind: "executable")
